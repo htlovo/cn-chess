@@ -7,14 +7,27 @@
 	var startTxt=start.firstChild;
 	var tip=document.getElementById('tip');
 	var tipTxt=tip.firstChild;
-	var i,j;
+	var ret=document.getElementById('retract');
+	var i;
+	var step;
 	var id;
-	var piece
+	var piece;
+	var record;
 	//红先
-	iuuihx();
+	startGame();
 	//初始化，填充棋子，给红棋子增加提子事件，增加颜色，背景,重置提示信息
-	function iuuihx() {
+	function startGame() {
+		EventUtil.removeHandler(start,"click",startGame);
+		EventUtil.removeHandler(ret,"click",retract);
 		var zi;
+		player.className="redpiece";
+		playerTxt.nodeValue="帅";
+		start.className="cantclick";
+		ret.className="cantclick";
+		tipTxt.nodeValue="对弈开始";
+		step=0;
+		record=[];
+		piece=0;
 		for (i = 0; i < square.length; i++) {
 			zi = square[i].firstChild;
 			//判断是否填子
@@ -55,55 +68,123 @@
 			}
 			//判断是否有子
 			if (square[i].firstChild.nodeValue!==" ") {
-				square[i].style.background="radial-gradient(#ec0 69%, transparent 0) ";
 				if (Number(square[i].id.replace("sq","")[0])<5) {
-					square[i].style.color="rgb(0, 0, 0)";
+					square[i].className="blackpiece";
 				} else {
-					square[i].style.color="rgb(255, 0, 0)";
-					square[i].onclick=tizi;
+					square[i].className="redpiece";
 				}
 			}else {
-				square[i].onclick=null;
-				square[i].style=" ";
+				square[i].className=" ";
 			}
 		}
-		start.onclick=null;
-		player.parentNode.firstChild.nodeValue="轮到";
-		playerTxt.nodeValue="红方";
-		startTxt.nodeValue="已经开始";
-		tipTxt.nodeValue="对弈开始";
-		piece=0;	
-	} 
-	//棋子落下事件,改变棋手，判断胜负，改变棋子位置
-	function gameover(iizi,bwiizi) {
-		if (tipTxt.nodeValue!=="对弈中..") {
-			startTxt.nodeValue="重新开始";
-			tipTxt.nodeValue="对弈中..";
-			start.onclick=iuuihx;
-		}
-		piece=(piece)?0:1;
-		//判断胜负
-		var bwiiziName=bwiizi.firstChild.nodeValue;
-		if (bwiiziName==="将"||bwiiziName==="帅") {
-			player.parentNode.firstChild.nodeValue="恭喜";
-			for (i = 0; i < square.length; i++) {
-				square[i].onclick=null;
-			}
-			tipTxt.nodeValue="对弈结束";
-			if (bwiiziName==="将") {
-				playerTxt.nodeValue="红胜";
-			} else {
-				playerTxt.nodeValue="黑胜";
-			}
-			piece=2;
+		EventUtil.addHandler(board,"mousedown",select);
+	}
+	//提子
+	function select(event) {
+		event=EventUtil.getEvent(event);
+		var target = EventUtil.getTarget(event);
+		var selectpiece={
+			sq:target,
+			id:target.id.replace("sq",""),
+			name:target.firstChild.nodeValue
+		};
+		selectpiece.row=Number(selectpiece.id[0]);
+		selectpiece.col=Number(selectpiece.id[1]);
+
+		//判断是否有子并且是本轮的棋子？
+		if (piece===0&&selectpiece.sq.className.search(/redpiece/)!==-1||piece===1&&selectpiece.sq.className.search(/blackpiece/)!==-1) {
+			addClass(selectpiece.sq,"thispiece");
+			EventUtil.removeHandler(board,"mousedown",select);
+			EventUtil.addHandler(board,"mousedown",piecego);
 		}
 		//落子
-		bwiizi.style.color=iizi.style.color;
-		bwiizi.firstChild.nodeValue=iizi.firstChild.nodeValue;
-		bwiizi.style.background="radial-gradient(#ec0 69%, transparent 0) ";
-		iizi.style=" ";
-		iizi.firstChild.nodeValue=" ";
-	}
+		function piecego(event) {
+			EventUtil.removeHandler(board,"mousedown",piecego);
+			event=EventUtil.getEvent(event);
+			var target = EventUtil.getTarget(event);
+			var gopiece={
+				sq:target,
+				id:target.id.replace("sq",""),
+				name:target.firstChild.nodeValue
+			}
+			gopiece.row=Number(gopiece.id[0]);
+			gopiece.col=Number(gopiece.id[1]);
+			//判断落子处是否是自身，是否是己方子
+			if (gopiece.id===selectpiece.id) {
+				selectpiece.sq.className=selectpiece.sq.className.replace("thispiece"," ");
+				EventUtil.addHandler(board,"mousedown",select);
+			} else if(document.defaultView.getComputedStyle(gopiece.sq, null).color===document.defaultView.getComputedStyle(selectpiece.sq, null).color&&document.defaultView.getComputedStyle(gopiece.sq, null).backgroundImage===document.defaultView.getComputedStyle(selectpiece.sq, null).backgroundImage){
+				select(event);
+			} else {
+				//判断棋子行走是否符合规则，符合规则的话改变棋手判断落子处是否是将或帅					
+				switch (selectpiece.name) {
+					case "车" : 
+						if (ie(selectpiece.row,selectpiece.col,gopiece.row,gopiece.col)) {
+							piecedown(selectpiece.sq,gopiece.sq);
+						}
+						break;
+					case "马" : 
+						if (ma(selectpiece.row,selectpiece.col,gopiece.row,gopiece.col)) {
+							piecedown(selectpiece.sq,gopiece.sq);
+						}
+						break;
+					case "炮" : 
+						if (pc(selectpiece.row,selectpiece.col,gopiece.row,gopiece.col)) {
+							piecedown(selectpiece.sq,gopiece.sq);
+						}
+						break;
+					case "象" : 
+						if (xlb(selectpiece.row,selectpiece.col,gopiece.row,gopiece.col)) {
+							piecedown(selectpiece.sq,gopiece.sq);
+						}
+						break;
+					case "士" : 
+						if (uib(selectpiece.row,selectpiece.col,gopiece.row,gopiece.col)) {
+							piecedown(selectpiece.sq,gopiece.sq);
+						}
+						break;
+					case "将" : 
+						if (jl(selectpiece.row,selectpiece.col,gopiece.row,gopiece.col)) {
+							piecedown(selectpiece.sq,gopiece.sq);
+						}
+						break;
+					case "卒" : 
+						if (zu(selectpiece.row,selectpiece.col,gopiece.row,gopiece.col)) {
+							piecedown(selectpiece.sq,gopiece.sq);
+						}
+						break;
+					case "相" : 
+						if (xlr(selectpiece.row,selectpiece.col,gopiece.row,gopiece.col)) {
+							piecedown(selectpiece.sq,gopiece.sq);
+						}
+						break;
+					case "仕" : 
+						if (uir(selectpiece.row,selectpiece.col,gopiece.row,gopiece.col)) {
+							piecedown(selectpiece.sq,gopiece.sq);
+						}
+						break;
+					case "帅" : 
+						if (uk(selectpiece.row,selectpiece.col,gopiece.row,gopiece.col)) {
+							piecedown(selectpiece.sq,gopiece.sq);
+						}
+						break;
+					case "兵" : 
+						if (bk(selectpiece.row,selectpiece.col,gopiece.row,gopiece.col)) {
+							piecedown(selectpiece.sq,gopiece.sq);
+						}
+						break;
+					default:
+						alert("!!!!");
+				}
+				
+			} 
+			//恢复棋子提子事件
+			if (piece===0||piece===1) {
+				selectpiece.sq.className=selectpiece.sq.className.replace("thispiece"," ");
+				EventUtil.addHandler(board,"mousedown",select);
+			}
+		}
+	} 
 	//定义棋子行走规则，符合返回true，否则返回false
 	function ie(x1,y1,x2,y2) {
 		if (x1===x2) {
@@ -270,116 +351,95 @@
 		}
 		return false;
 	}
-	//提子
-	function tizi() {
-		var dhqmzi={
-			square:this,
-			id:this.id.replace("sq",""),
-			name:this.firstChild.nodeValue
-		};
-		dhqmzi.hh=Number(dhqmzi.id[0]);
-		dhqmzi.lp=Number(dhqmzi.id[1]);
-		//重复判断是否有子？
-		if (dhqmzi.name!==" ") {
-			dhqmzi.square.style.outline="#aa0 dashed 2px";
-			for (i = 0; i < square.length; i++) {
-				square[i].onclick=lozi; 
+	//棋子落下事件,改变棋手，判断胜负，改变棋子位置
+	function piecedown(iizi,deadpiece) {
+		//更改显示信息
+		if (step===0) {
+			startTxt.nodeValue="新局";
+			tipTxt.nodeValue="对弈中";
+			EventUtil.addHandler(start,"click",startGame);
+			EventUtil.addHandler(ret,"click",retract);
+			start.className=" ";
+			ret.className=" ";
+		}
+		//判断胜负
+		var deadpieceName=deadpiece.firstChild.nodeValue;
+		if (deadpieceName==="将"||deadpieceName==="帅") {
+			if (deadpieceName==="将") {
+				tipTxt.nodeValue="红胜";
+			} else {
+				tipTxt.nodeValue="黑胜";
+			}
+			piece=2;
+			EventUtil.removeHandler(ret,"click",retract);
+			ret.className="cantclick";
+		}
+		//记录历史
+		step=step+1;
+		record[step-1]={
+			sq1:iizi,
+			sq2:deadpiece,
+			sq1name:iizi.firstChild.nodeValue,
+			sq2name:deadpiece.firstChild.nodeValue,
+		}
+		//更改棋子
+		if(record[step-2]){
+			record[step-2].sq1.className=record[step-2].sq1.className.replace("lastpiece"," ");
+			record[step-2].sq2.className=record[step-2].sq2.className.replace("lastpiece"," ");
+		}
+		deadpiece.className=iizi.className.replace("thispiece","lastpiece");
+		deadpiece.firstChild.nodeValue=iizi.firstChild.nodeValue;
+		iizi.className="lastpiece";
+		iizi.firstChild.nodeValue=" ";
+		//更改棋手显示信息
+		if (piece===1) {
+			piece=0;
+			player.className="redpiece";
+			playerTxt.nodeValue="帅"
+		} else if(piece===0) {
+			piece=1;
+			player.className="blackpiece";
+			playerTxt.nodeValue="将";
+		} else{
+			player.className=" ";
+			playerTxt.nodeValue=" ";
+			alert("恭喜"+tipTxt.nodeValue);
+		}
+	}
+	function retract() {
+		record[step-1].sq1.firstChild.nodeValue=record[step-1].sq1name;
+		record[step-1].sq2.firstChild.nodeValue=record[step-1].sq2name;
+		if (piece===0) {
+			record[step-1].sq1.className=("blackpiece");
+			if (record[step-1].sq2name===" ") {
+				record[step-1].sq2.className=" ";
+			} else {
+				record[step-1].sq2.className=("redpiece");
+			}
+		} else{
+			record[step-1].sq1.className=("redpiece");
+			if (record[step-1].sq2name===" ") {
+				record[step-1].sq2.className=" ";
+			} else {
+				record[step-1].sq2.className=("blackpiece");
 			}
 		}
-		//落子
-		function lozi() {
-			var xxyizi={
-				square:this,
-				id:this.id.replace("sq",""),
-				name:this.firstChild.nodeValue
-			}
-			xxyizi.hh=Number(xxyizi.id[0]);
-			xxyizi.lp=Number(xxyizi.id[1]);
-			//判断是否 移动				判断是否 不是吃自己的子
-			if (xxyizi.id!==dhqmzi.id&&(xxyizi.name===" "||xxyizi.square.style.color!==dhqmzi.square.style.color)) {
-				//判断棋子行走是否符合规则，符合规则的话改变棋手判断落子处是否是将或帅					
-				switch (dhqmzi.name) {
-					case "车" : 
-						if (ie(dhqmzi.hh,dhqmzi.lp,xxyizi.hh,xxyizi.lp)) {
-							gameover(dhqmzi.square,xxyizi.square);
-						}
-						break;
-					case "马" : 
-						if (ma(dhqmzi.hh,dhqmzi.lp,xxyizi.hh,xxyizi.lp)) {
-							gameover(dhqmzi.square,xxyizi.square);
-						}
-						break;
-					case "炮" : 
-						if (pc(dhqmzi.hh,dhqmzi.lp,xxyizi.hh,xxyizi.lp)) {
-							gameover(dhqmzi.square,xxyizi.square);
-						}
-						break;
-					case "象" : 
-						if (xlb(dhqmzi.hh,dhqmzi.lp,xxyizi.hh,xxyizi.lp)) {
-							gameover(dhqmzi.square,xxyizi.square);
-						}
-						break;
-					case "士" : 
-						if (uib(dhqmzi.hh,dhqmzi.lp,xxyizi.hh,xxyizi.lp)) {
-							gameover(dhqmzi.square,xxyizi.square);
-						}
-						break;
-					case "将" : 
-						if (jl(dhqmzi.hh,dhqmzi.lp,xxyizi.hh,xxyizi.lp)) {
-							gameover(dhqmzi.square,xxyizi.square);
-						}
-						break;
-					case "卒" : 
-						if (zu(dhqmzi.hh,dhqmzi.lp,xxyizi.hh,xxyizi.lp)) {
-							gameover(dhqmzi.square,xxyizi.square);
-						}
-						break;
-					case "相" : 
-						if (xlr(dhqmzi.hh,dhqmzi.lp,xxyizi.hh,xxyizi.lp)) {
-							gameover(dhqmzi.square,xxyizi.square);
-						}
-						break;
-					case "仕" : 
-						if (uir(dhqmzi.hh,dhqmzi.lp,xxyizi.hh,xxyizi.lp)) {
-							gameover(dhqmzi.square,xxyizi.square);
-						}
-						break;
-					case "帅" : 
-						if (uk(dhqmzi.hh,dhqmzi.lp,xxyizi.hh,xxyizi.lp)) {
-							gameover(dhqmzi.square,xxyizi.square);
-						}
-						break;
-					case "兵" : 
-						if (bk(dhqmzi.hh,dhqmzi.lp,xxyizi.hh,xxyizi.lp)) {
-							gameover(dhqmzi.square,xxyizi.square);
-						}
-						break;
-					default:
-						alert("!!!!");
-				}
-			}
-			//恢复棋子提子事件
-			dhqmzi.square.style.outline="none";
-			if (piece===0) {
-				playerTxt.nodeValue="红方";
-				for (i = 0; i < square.length; i++) {
-					square[i].onclick=null;
-					if (square[i].firstChild.nodeValue!==" ") {
-						if (square[i].style.color==="rgb(255, 0, 0)") {
-							square[i].onclick=tizi;
-						}
-					} 
-				}
-			} else if(piece===1) {
-				playerTxt.nodeValue="黑方";
-				for (i = 0; i < square.length; i++) {
-					square[i].onclick=null;	
-					if (square[i].firstChild.nodeValue!==" ") {
-						if (square[i].style.color==="rgb(0, 0, 0)") {
-							square[i].onclick=tizi;
-						} 
-					}
-				}
-			}
+		if (record[step-2]) {
+			record[step-2].sq1.className="lastpiece";
+			addClass(record[step-2].sq2,"lastpiece");
+		}
+		step=step-1;
+		if (piece===1) {
+			piece=0;
+			player.className="redpiece";
+			playerTxt.nodeValue="帅";
+		} else {
+			piece=1;
+			player.className="blackpiece";
+			playerTxt.nodeValue="将";
+		}
+		if (step===0) {
+			EventUtil.removeHandler(ret,"click",retract);
+			ret.className="cantclick";
 		}
 	}
