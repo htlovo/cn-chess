@@ -77,7 +77,7 @@
 				square[i].className=" ";
 			}
 		}
-		EventUtil.addHandler(board,"mousedown",select);
+		EventUtil.addHandler(board,"click",select);
 	}
 	//提子
 	function select(event) {
@@ -94,12 +94,12 @@
 		//判断是否有子并且是本轮的棋子？
 		if (piece===0&&selectpiece.sq.className.search(/redpiece/)!==-1||piece===1&&selectpiece.sq.className.search(/blackpiece/)!==-1) {
 			addClass(selectpiece.sq,"thispiece");
-			EventUtil.removeHandler(board,"mousedown",select);
-			EventUtil.addHandler(board,"mousedown",piecego);
+			EventUtil.removeHandler(board,"click",select);
+			EventUtil.addHandler(board,"click",piecego);
 		}
 		//落子
 		function piecego(event) {
-			EventUtil.removeHandler(board,"mousedown",piecego);
+			EventUtil.removeHandler(board,"click",piecego);
 			event=EventUtil.getEvent(event);
 			var target = EventUtil.getTarget(event);
 			var gopiece={
@@ -112,7 +112,7 @@
 			//判断落子处是否是自身，是否是己方子
 			if (gopiece.id===selectpiece.id) {
 				selectpiece.sq.className=selectpiece.sq.className.replace("thispiece"," ");
-				EventUtil.addHandler(board,"mousedown",select);
+				EventUtil.addHandler(board,"click",select);
 			} else if(document.defaultView.getComputedStyle(gopiece.sq, null).color===document.defaultView.getComputedStyle(selectpiece.sq, null).color&&document.defaultView.getComputedStyle(gopiece.sq, null).backgroundImage===document.defaultView.getComputedStyle(selectpiece.sq, null).backgroundImage){
 				select(event);
 			} else {
@@ -181,7 +181,7 @@
 			//恢复棋子提子事件
 			if (piece===0||piece===1) {
 				selectpiece.sq.className=selectpiece.sq.className.replace("thispiece"," ");
-				EventUtil.addHandler(board,"mousedown",select);
+				EventUtil.addHandler(board,"click",select);
 			}
 		}
 	} 
