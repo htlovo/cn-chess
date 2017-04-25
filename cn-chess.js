@@ -115,7 +115,7 @@
 				EventUtil.addHandler(board,"click",select);
 			} else if(document.defaultView.getComputedStyle(gopiece.sq, null).color===document.defaultView.getComputedStyle(selectpiece.sq, null).color&&document.defaultView.getComputedStyle(gopiece.sq, null).backgroundImage===document.defaultView.getComputedStyle(selectpiece.sq, null).backgroundImage){
 				select(event);
-			} else {
+			} else if(target.id!=="board"){
 				//判断棋子行走是否符合规则，符合规则的话改变棋手判断落子处是否是将或帅					
 				switch (selectpiece.name) {
 					case "车" : 
