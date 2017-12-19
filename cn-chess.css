@@ -5,14 +5,19 @@ body{
     user-select:none;
     cursor: default;
     margin: 0;
+    background-color: #efe;
 }
 p,h1{
 	margin:0;
 }
 #cn-chess{
-	margin: 0 auto;
-	width: auto;
-	min-width: 900px;
+	margin: 10px auto;
+	width: 1200px;
+}
+@media (max-width: 1200px) { 
+  #cn-chess{ 
+    width: 900px; 
+  } 
 }
 h1{
 	font-size: 40px;
@@ -22,7 +27,7 @@ h1{
 	background-color: #ddd;
 	float: left;
 	width:300px;
-	height:300px;
+	height:333.33px;
 	text-align: center;
 }
 	/*上*/
@@ -35,10 +40,10 @@ h1{
 		font-size: 66px;
 		line-height: 150px;
 		text-align: center;
-		margin: 0 auto;
+		margin: 40px auto;
 		background-color: #dc3;
-		width:50%;
-		height:50%;
+		width:150px;
+		height:150px;
 		background-repeat: no-repeat;
 		-webkit-background-size: 100px 100px;
 		background-size: 100px 100px;
@@ -78,6 +83,7 @@ h1{
 	background-position: left 48px top 48px, left 48px top 48px, left 48px bottom 48px, left 48px top 48px, left 348px top 48px,left 348px top 48px,left 348px bottom 48px,left 348px bottom 48px;
 	width:900px;
 	height:1000px;
+	float: left;
 }
 #board>div{
 	font-family: "隶书","楷体","楷体_GB2312";
